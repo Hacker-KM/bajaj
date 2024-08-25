@@ -12,7 +12,7 @@ const Page = () => {
       const parsedJson = JSON.parse(jsonInput); // Attempt to parse the JSON input
       console.log("Parsed JSON:", parsedJson); // Log parsed JSON for debugging
       const res = await axios.post(
-        "https://bajaj-api-xi-pink.vercel.app/bfhl",
+        "https://21bsa10006backend.vercel.app/bfhl",
         parsedJson
       ); // Send API request
       setResponse(res.data); // Store the response data
