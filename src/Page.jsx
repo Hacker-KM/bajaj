@@ -6,13 +6,13 @@ const Page = () => {
   const [jsonInput, setJsonInput] = useState(""); // State to handle JSON input
   const [response, setResponse] = useState(null); // State to store the API response
   const [selectedOptions, setSelectedOptions] = useState([]); // State to store selected options
+  const [showDropdown, setShowDropdown] = useState(false); // State to toggle dropdown visibility
 
   const handleSubmit = async () => {
     try {
       const parsedJson = JSON.parse(jsonInput); // Attempt to parse the JSON input
-      console.log("Parsed JSON:", parsedJson); // Log parsed JSON for debugging
       const res = await axios.post(
-        "https://21bsa10006backend.vercel.app/bfhl",
+        "https://21BSA10006backend.vercel.app/bfhl",
         parsedJson
       ); // Send API request
       setResponse(res.data); // Store the response data
@@ -25,54 +25,101 @@ const Page = () => {
     }
   };
 
-  const handleDropdownChange = (event) => {
-    const options = Array.from(
-      event.target.selectedOptions,
-      (option) => option.value
-    );
-    setSelectedOptions(options); // Update selected options state
+  const handleOptionToggle = (option) => {
+    if (selectedOptions.includes(option)) {
+      setSelectedOptions(selectedOptions.filter((item) => item !== option)); // Remove option if already selected
+    } else {
+      setSelectedOptions([...selectedOptions, option]); // Add option if not selected
+    }
   };
 
-  const getFilteredResponse = () => {
-    if (!response) return null;
-    const filtered = {};
-    if (selectedOptions.includes("Alphabets")) {
-      filtered.alphabets = response.alphabets;
+  const getFormattedResponse = () => {
+    if (!response) return "";
+    let formatted = "";
+
+    if (selectedOptions.includes("Alphabets") && response.alphabets) {
+      formatted += `Alphabets: ${response.alphabets.join(", ")}\n`;
     }
-    if (selectedOptions.includes("Numbers")) {
-      filtered.numbers = response.numbers;
+    if (selectedOptions.includes("Numbers") && response.numbers) {
+      formatted += `Numbers: ${response.numbers.join(", ")}\n`;
     }
-    if (selectedOptions.includes("Highest lowercase alphabet")) {
-      filtered.highest_lowercase_alphabet = response.highest_lowercase_alphabet;
+    if (
+      selectedOptions.includes("Highest lowercase alphabet") &&
+      response.highest_lowercase_alphabet
+    ) {
+      formatted += `Highest lowercase alphabet: ${response.highest_lowercase_alphabet.join(
+        ", "
+      )}`;
     }
-    return filtered; // Return filtered data based on selected options
+
+    return formatted.trim(); // Return the formatted response as a string
   };
+
+  const availableOptions = [
+    "Alphabets",
+    "Numbers",
+    "Highest lowercase alphabet",
+  ].filter((option) => !selectedOptions.includes(option));
 
   return (
     <div className="container">
-      <h1>21BSA10006</h1>
+      <h1 className="reg">21BSA10006</h1>
       <textarea
         value={jsonInput}
         onChange={(e) => setJsonInput(e.target.value)}
         placeholder="Enter JSON"
         rows="4"
       />
-      <button onClick={handleSubmit}>Submit</button>
+      <button onClick={handleSubmit} className="submit-button">
+        Submit
+      </button>
 
       {response && (
         <>
-          <label>Select options:</label>
-          <select multiple onChange={handleDropdownChange}>
-            <option value="Alphabets">Alphabets</option>
-            <option value="Numbers">Numbers</option>
-            <option value="Highest lowercase alphabet">
-              Highest lowercase alphabet
-            </option>
-          </select>
+          <h3>Select options:</h3>
+          <div className="dropdown-container">
+            <div
+              className="selected-options"
+              onClick={() => setShowDropdown(!showDropdown)}
+            >
+              {selectedOptions.length > 0 ? (
+                selectedOptions.map((option) => (
+                  <div key={option} className="selected-option">
+                    {option}
+                    <span
+                      className="remove-option"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent dropdown toggle when clicking remove
+                        handleOptionToggle(option);
+                      }}
+                    >
+                      ✖
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <span className="placeholder">Select...</span>
+              )}
+              <span className={`arrow ${showDropdown ? "up" : "down"}`}>▼</span>
+            </div>
+            {showDropdown && (
+              <select
+                multiple
+                onChange={(e) => handleOptionToggle(e.target.value)}
+                className="dropdown"
+              >
+                {availableOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
 
           <div>
             <h3>Filtered Response:</h3>
-            <pre>{JSON.stringify(getFilteredResponse(), null, 2)}</pre>
+            <pre>{getFormattedResponse()}</pre>
           </div>
         </>
       )}
